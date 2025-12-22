@@ -8,6 +8,7 @@ from streamlit_drawable_canvas import st_canvas
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 
+from preprocessing import preprocess_image
 from contrast import contrast_process_image, apply_clahe
 from colorization import colorize_image, auto_generate_grid_scribbles, BLENDING_FACTOR, RELAXATION_LIMIT
 from damage import remove_scratches
@@ -55,8 +56,7 @@ with tab_full_correction:
         orig_color = np.array(raw_pil)
         gray_source = cv2.cvtColor(orig_color, cv2.COLOR_RGB2GRAY)
 
-        # Preprocessing TODO
-        preprocessed_img = gray_source # PLACEHOLDER
+        preprocessed_img = preprocess_image(gray_source)
 
         if "processed_gray" not in st.session_state:
             st.session_state.processed_gray = None
@@ -148,8 +148,7 @@ with tab_contrast:
         orig_color = np.array(Image.open(manual_file).convert("RGB"))
         gray_source = cv2.cvtColor(orig_color, cv2.COLOR_RGB2GRAY)
 
-        # Preprocessing TODO
-        preprocessed_img = gray_source # PLACEHOLDER
+        preprocessed_img = preprocess_image(gray_source)
         
         c1, c2 = st.columns([1, 1])
         if st.button("Restore", key="contrast_restore"):
