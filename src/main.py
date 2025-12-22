@@ -10,6 +10,7 @@ from skimage.metrics import structural_similarity as ssim
 
 from contrast import contrast_process_image, apply_clahe
 from colorization import colorize_image, auto_generate_grid_scribbles, BLENDING_FACTOR, RELAXATION_LIMIT
+from damage import remove_scratches
 
 def calculate_metrics(orig_rgb, result_rgb):
     p_val = psnr(orig_rgb, result_rgb)
@@ -61,14 +62,15 @@ with tab_full_correction:
             st.session_state.processed_gray = None
         
         if st.button("Restore", key="full_restore"):
-            # Damage Correction TODO
-            damage_corrected = preprocessed_img # PLACEHOLDER
+            restored_rgb, _ = remove_scratches(orig_color)
+            damage_corrected = cv2.cvtColor(restored_rgb, cv2.COLOR_RGB2GRAY)
 
             # Contrast Correction
             orig_img, orig_hist = contrast_process_image(damage_corrected)
             contrast_corrected, _ = apply_clahe(orig_img, orig_hist)
 
             st.session_state.processed_gray = contrast_corrected
+
 
         # Manual Colorization
         if st.session_state.processed_gray is not None:
@@ -122,8 +124,14 @@ with tab_damage:
             with c1:
                 st.image(orig_color, caption="Original Image", use_column_width=True)
             
-            # correction
-            #TODO
+            with st.spinner("Processing scratches..."):
+                restored_img, debug_mask = remove_scratches(orig_color)
+            
+            with c2:
+                st.image(restored_img, caption="Restored Image (Scratches Removed)", use_column_width=True)
+            
+            with st.expander("Show Scratch Mask"):
+                st.image(debug_mask, caption="Detected Scratches Mask", use_column_width=True)
 
 with tab_contrast:
     st.header("Contrast Correction")
