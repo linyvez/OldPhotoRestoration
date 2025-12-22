@@ -110,28 +110,35 @@ with tab_full_correction:
 
 with tab_damage:
     st.header("Damage Correction")
-    st.write("Upload an **original** image. It will be grayscaled, then damage correction will be applied.")
+    st.write("Upload an **original** image with scratches.")
     manual_file = st.file_uploader("Upload Original Image", type=["png", "jpg"], key="damage_up")
+    
     if manual_file:
         orig_color = np.array(Image.open(manual_file).convert("RGB"))
-        gray_source = cv2.cvtColor(orig_color, cv2.COLOR_RGB2GRAY)
-
-        # Preprocessing TODO
-        preprocessed_img = gray_source # PLACEHOLDER
         
+        col_sets1, col_sets2 = st.columns(2)
+        
+        with col_sets1:
+            thresh_val = st.slider("Threshold", 5, 100, 35, 
+                                   help="Менше значення = більше знайдених подряпин.")
+            
+        with col_sets2:
+            radius_val = st.slider("Inpaint Radius", 1, 10, 3,)
+
         c1, c2 = st.columns([1, 1])
+        
         if st.button("Restore", key="damage_restore"):
             with c1:
                 st.image(orig_color, caption="Original Image", use_column_width=True)
             
             with st.spinner("Processing scratches..."):
-                restored_img, debug_mask = remove_scratches(orig_color)
+                restored_img, debug_mask = remove_scratches(orig_color, threshold=thresh_val, radius=radius_val)
             
             with c2:
-                st.image(restored_img, caption="Restored Image (Scratches Removed)", use_column_width=True)
+                st.image(restored_img, caption="Restored Image", use_column_width=True)
             
             with st.expander("Show Scratch Mask"):
-                st.image(debug_mask, caption="Detected Scratches Mask", use_column_width=True)
+                st.image(debug_mask, caption="Mask", use_column_width=True)
 
 with tab_contrast:
     st.header("Contrast Correction")
