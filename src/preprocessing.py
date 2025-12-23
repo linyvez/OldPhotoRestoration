@@ -93,14 +93,14 @@ def preprocess_image(img):
 
     if candidate is None:
         print("No corners detected. Skipping perspective correction.")
-        return img
+        return img, None
     
     dst = np.array([(0, 0), (img_width-1, 0), (img_width-1, img_height-1), (0, img_height-1)]).astype(np.float32)
 
     matrix = cv.getPerspectiveTransform(candidate, dst)
     result = cv.warpPerspective(img, matrix, (img_width, img_height))
 
-    return result
+    return result, candidate
 
 
 if __name__ == '__main__':

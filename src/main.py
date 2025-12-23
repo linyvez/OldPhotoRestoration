@@ -5,6 +5,8 @@ from PIL import Image
 
 import streamlit as st
 from streamlit_drawable_canvas import st_canvas
+from streamlit_image_coordinates import streamlit_image_coordinates
+
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 
@@ -108,16 +110,32 @@ with tab_full_correction:
     st.write("Upload an **original** image. It will be grayscaled, then damage and contrast correction will be applied, and then manual colorization will start.")
     manual_file = st.file_uploader("Upload Original Image", type=["png", "jpg"], key="full_res_up")
 
+    to_clean = st.empty()
+    if "already_shown" not in st.session_state:
+            st.session_state.already_shown = False
+
     if st.button("New Image", key="full_new_img"):
         st.session_state.processed_gray = None
         st.experimental_rerun()
+        to_clean.empty()
+        st.session_state.already_shown = False
 
     if manual_file:
         raw_pil = Image.open(manual_file).convert("RGB")
         orig_color = np.array(raw_pil)
 
-        preprocessed_img = preprocess_image(orig_color)
+        preprocessed_img, candidate = preprocess_image(orig_color)
         preprocessed_img = orig_color if preprocessed_img is None else preprocessed_img
+
+        orig_copy = orig_color.copy()
+        if candidate is not None:
+            for point in candidate:
+                # print(point)
+                cv2.circle(orig_copy, point.astype(int), 4, (255, 0, 0), -1)
+
+        if not st.session_state.already_shown:
+            to_clean.image(orig_copy, caption="Detected photo")
+            st.session_state.already_shown = True
 
         if "processed_gray" not in st.session_state:
             st.session_state.processed_gray = None
@@ -219,6 +237,7 @@ with tab_contrast:
         
         c1, c2 = st.columns([1, 1])
         if st.button("Restore", key="contrast_restore"):
+            gray = cv2.cvtColor(preprocessed_img, cv2.COLOR_RGB2GRAY)
             orig_img, orig_hist = contrast_process_image(preprocessed_img)
             with c1:
                 st.image(orig_color, caption="Original Image", use_column_width=True)
