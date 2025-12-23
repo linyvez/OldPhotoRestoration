@@ -52,25 +52,27 @@ def get_best_candidate(img):
         peri = cv.arcLength(cnt, True)
         approx = cv.approxPolyDP(cnt, 0.02 * peri, True)
 
-        points = [approx[0][0], approx[1][0], approx[2][0], approx[3][0]]
-        ordered_points = sorted_points(points)
+        if len(approx) == 4:
+            # Flatten the array and get points
+            points = [p[0] for p in approx]
+            ordered_points = sorted_points(points)
 
-        for point in ordered_points:
-            if point is None:
-                break
-        
-        if point is None:
-            continue
+            # Check if sorting failed (your function returns None in quadrants)
+            if any(p is None for p in ordered_points):
+                continue
 
-        cnt_height = abs(ordered_points[0][1] - ordered_points[2][1])
-        cnt_width = abs(ordered_points[0][0] - ordered_points[1][0])
+            cnt_height = abs(ordered_points[0][1] - ordered_points[2][1])
+            cnt_width = abs(ordered_points[0][0] - ordered_points[1][0])
 
-        expected_area = cnt_height * cnt_width
-        calculated_area = cv.contourArea(cnt)
+            expected_area = cnt_height * cnt_width
+            calculated_area = cv.contourArea(cnt)
 
-        if len(approx) == 4 and calculated_area > 0.6 * img_area and 0.8 * expected_area < calculated_area and calculated_area < 1.2 * expected_area:
-            candidates.append((ordered_points, calculated_area))
+            # Area validation
+            if calculated_area > 0.4 * img_area and 0.7 * expected_area < calculated_area < 1.3 * expected_area:
+                candidates.append((ordered_points, calculated_area))
 
+    if not candidates:
+        return None
 
     candidates.sort(key=lambda x: -x[1])
     candidate = candidates[0]
@@ -84,6 +86,11 @@ def preprocess_image(img):
     img_height, img_width = img.shape[:2]
     
     candidate = get_best_candidate(img)
+
+    if candidate is None:
+        print("No corners detected. Skipping perspective correction.")
+        return img
+    
     dst = np.array([(0, 0), (img_width-1, 0), (img_width-1, img_height-1), (0, img_height-1)]).astype(np.float32)
 
     matrix = cv.getPerspectiveTransform(candidate, dst)

@@ -118,6 +118,7 @@ with tab_full_correction:
         gray_source = cv2.cvtColor(orig_color, cv2.COLOR_RGB2GRAY)
 
         preprocessed_img = preprocess_image(gray_source)
+        preprocessed_img = gray_source if preprocessed_img is None else preprocessed_img
 
         if "processed_gray" not in st.session_state:
             st.session_state.processed_gray = None
@@ -142,7 +143,7 @@ with tab_full_correction:
             st.write("**Preset Colors:**")
             stroke_color = color_palette(PRESET_COLORS, state_key="full_st_color")
             st.markdown("<br>", unsafe_allow_html=True)
-            stroke_color = st.color_picker("**Fine-tune color**", stroke_color)
+            stroke_color = st.color_picker("**Fine-tune color**", stroke_color, key="full_color")
             st.session_state["full_st_color"] = stroke_color
             stroke_width = st.slider("**Brush Size**", 1, 20, 5, key="full_st_width")
             canvas_result = st_canvas(
@@ -179,6 +180,9 @@ with tab_damage:
     
     if manual_file:
         orig_color = np.array(Image.open(manual_file).convert("RGB"))
+
+        preprocessed_img = preprocess_image(orig_color)
+        preprocessed_img = gray_source if preprocessed_img is None else preprocessed_img
         
         col_sets1, col_sets2 = st.columns(2)
         
@@ -196,7 +200,7 @@ with tab_damage:
                 st.image(orig_color, caption="Original Image", use_column_width=True)
             
             with st.spinner("Processing scratches..."):
-                restored_img, debug_mask = remove_scratches(orig_color, threshold=thresh_val, radius=radius_val)
+                restored_img, debug_mask = remove_scratches(preprocessed_img, threshold=thresh_val, radius=radius_val)
             
             with c2:
                 st.image(restored_img, caption="Restored Image", use_column_width=True)
@@ -213,6 +217,7 @@ with tab_contrast:
         gray_source = cv2.cvtColor(orig_color, cv2.COLOR_RGB2GRAY)
 
         preprocessed_img = preprocess_image(gray_source)
+        preprocessed_img = gray_source if preprocessed_img is None else preprocessed_img
         
         c1, c2 = st.columns([1, 1])
         if st.button("Restore", key="contrast_restore"):
@@ -241,7 +246,7 @@ with tab_manual_colorization:
             st.write("**Preset Colors:**")
             stroke_color = color_palette(PRESET_COLORS, state_key="st_color")
             st.markdown("<br>", unsafe_allow_html=True)
-            stroke_color = st.color_picker("**Fine-tune color**", stroke_color)
+            stroke_color = st.color_picker("**Fine-tune color**", stroke_color, key="st_color_")
             st.session_state["st_color"] = stroke_color
             stroke_width = st.slider("Brush Size", 1, 20, 5, key="st_width")
             canvas_result = st_canvas(

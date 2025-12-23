@@ -1,0 +1,8 @@
+streamlit==1.28.2
+opencv-python
+numpy
+Pillow
+streamlit-drawable-canvas==0.9.3
+mediapipe>=0.10.0
+scipy
+protobuf>=3.20.3
