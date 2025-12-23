@@ -198,7 +198,7 @@ with tab_damage:
     if manual_file:
         orig_color = np.array(Image.open(manual_file).convert("RGB"))
 
-        preprocessed_img = preprocess_image(orig_color)
+        preprocessed_img, _ = preprocess_image(orig_color)
         preprocessed_img = orig_color if preprocessed_img is None else preprocessed_img
         
         col_sets1, col_sets2 = st.columns(2)
@@ -232,13 +232,13 @@ with tab_contrast:
     if manual_file:
         orig_color = np.array(Image.open(manual_file).convert("RGB"))
 
-        preprocessed_img = preprocess_image(orig_color)
+        preprocessed_img, _ = preprocess_image(orig_color)
         preprocessed_img = orig_color if preprocessed_img is None else preprocessed_img
         
         c1, c2 = st.columns([1, 1])
         if st.button("Restore", key="contrast_restore"):
             gray = cv2.cvtColor(preprocessed_img, cv2.COLOR_RGB2GRAY)
-            orig_img, orig_hist = contrast_process_image(preprocessed_img)
+            orig_img, orig_hist = contrast_process_image(gray)
             with c1:
                 st.image(orig_color, caption="Original Image", use_column_width=True)
 
