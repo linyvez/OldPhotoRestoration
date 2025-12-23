@@ -115,16 +115,15 @@ with tab_full_correction:
     if manual_file:
         raw_pil = Image.open(manual_file).convert("RGB")
         orig_color = np.array(raw_pil)
-        gray_source = cv2.cvtColor(orig_color, cv2.COLOR_RGB2GRAY)
 
-        preprocessed_img = preprocess_image(gray_source)
-        preprocessed_img = gray_source if preprocessed_img is None else preprocessed_img
+        preprocessed_img = preprocess_image(orig_color)
+        preprocessed_img = orig_color if preprocessed_img is None else preprocessed_img
 
         if "processed_gray" not in st.session_state:
             st.session_state.processed_gray = None
         
         if st.button("Restore", key="full_restore"):
-            restored_rgb, _ = remove_scratches(orig_color)
+            restored_rgb, _ = remove_scratches(preprocessed_img)
             damage_corrected = cv2.cvtColor(restored_rgb, cv2.COLOR_RGB2GRAY)
 
             # Contrast Correction
@@ -182,7 +181,7 @@ with tab_damage:
         orig_color = np.array(Image.open(manual_file).convert("RGB"))
 
         preprocessed_img = preprocess_image(orig_color)
-        preprocessed_img = gray_source if preprocessed_img is None else preprocessed_img
+        preprocessed_img = orig_color if preprocessed_img is None else preprocessed_img
         
         col_sets1, col_sets2 = st.columns(2)
         
@@ -214,10 +213,9 @@ with tab_contrast:
     manual_file = st.file_uploader("Upload Original Image", type=["png", "jpg"], key="contrast_up")
     if manual_file:
         orig_color = np.array(Image.open(manual_file).convert("RGB"))
-        gray_source = cv2.cvtColor(orig_color, cv2.COLOR_RGB2GRAY)
 
-        preprocessed_img = preprocess_image(gray_source)
-        preprocessed_img = gray_source if preprocessed_img is None else preprocessed_img
+        preprocessed_img = preprocess_image(orig_color)
+        preprocessed_img = orig_color if preprocessed_img is None else preprocessed_img
         
         c1, c2 = st.columns([1, 1])
         if st.button("Restore", key="contrast_restore"):

@@ -87,8 +87,9 @@ def get_best_candidate(img):
 def preprocess_image(img):
 
     img_height, img_width = img.shape[:2]
+    gray = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
     
-    candidate = get_best_candidate(img)
+    candidate = get_best_candidate(gray)
 
     if candidate is None:
         print("No corners detected. Skipping perspective correction.")
@@ -106,10 +107,10 @@ if __name__ == '__main__':
  
     filename = '../photos/1.png'
     img_raw = cv.imread(filename)
-    gray = cv.cvtColor(img_raw,cv.COLOR_BGR2GRAY)
+    # gray = cv.cvtColor(img_raw,cv.COLOR_BGR2GRAY)
     
-    img = gray
-    result = preprocess_image(img)
+    # img = gray
+    result = preprocess_image(img_raw)
 
     # cv.drawContours(img_raw, long_contours, -1, (0, 255, 0), 3)
     cv.imshow('Contours', result)
