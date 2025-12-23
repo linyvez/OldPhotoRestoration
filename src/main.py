@@ -84,7 +84,12 @@ def color_palette(palette, state_key, swatch_size=26):
         f'<div style="aspect-ratio:1/1;width:{swatch_size}px;display:inline-block;background:{hexval};border-radius:50%;border:1px solid #aaa;margin:auto;" title="{name}"></div>'
         for name, hexval in palette.items()
     ]
-    default_idx = color_values.index(st.session_state.get(state_key, color_values[0]))
+    current_color = st.session_state.get(state_key, color_values[0])
+    if current_color in color_values:
+        default_idx = color_values.index(current_color)
+    else:
+        default_idx = 0
+        st.session_state[state_key] = color_values[0]
     selected = st.radio(
         label="Preset Color Palette",
         options=color_values,
