@@ -13,6 +13,37 @@ from contrast import contrast_process_image, apply_clahe
 from colorization import colorize_image, auto_generate_grid_scribbles, BLENDING_FACTOR, RELAXATION_LIMIT
 from damage import remove_scratches
 
+PRESET_COLORS = {
+    "White":        "#ffffff",
+    "Light Gray":   "#d3d3d3",
+    "Gray":         "#808080",
+    "Dark Gray":    "#4a4a4a",
+    "Black":        "#000000",
+
+    "Beige":        "#f5deb3",
+    "Sand":         "#e4d4a3",
+    "Brown":        "#8b5a2b",
+    "Dark Brown":   "#5a3a1e",
+    "Olive":        "#6b8e23",
+
+    "Light Green":  "#7cfc00",
+    "Green":        "#3cb371",
+    "Dark Green":   "#228b22",
+
+    "Sky Blue":     "#87ceeb",
+    "Blue":         "#4682b4",
+    "Dark Blue":    "#1f4e79",
+
+    "Pink":         "#ffb6c1",
+    "Red":          "#dc143c",
+    "Dark Red":     "#8b0000",
+
+    "Yellow":       "#ffd700",
+    "Orange":       "#ff8c00",
+    "Purple":       "#9370db",
+}
+
+
 def calculate_metrics(orig_rgb, result_rgb):
     p_val = psnr(orig_rgb, result_rgb)
     s_val = ssim(orig_rgb, result_rgb, channel_axis=2)
@@ -41,6 +72,36 @@ tab_contrast = tabs[2]
 tab_manual_colorization = tabs[3]
 tab_recovery_colorization = tabs[4]
 tab_evaluation = tabs[5]
+
+def color_palette(palette, state_key, swatch_size=26):
+    color_names = list(palette.keys())
+    color_values = list(palette.values())
+    swatch_labels = [
+        f'<div style="aspect-ratio:1/1;width:{swatch_size}px;display:inline-block;background:{hexval};border-radius:50%;border:3px solid #000;margin:auto;" title="{name}"></div>'
+        if st.session_state.get(state_key, color_values[0]) == hexval else
+        f'<div style="aspect-ratio:1/1;width:{swatch_size}px;display:inline-block;background:{hexval};border-radius:50%;border:1px solid #aaa;margin:auto;" title="{name}"></div>'
+        for name, hexval in palette.items()
+    ]
+    default_idx = color_values.index(st.session_state.get(state_key, color_values[0]))
+    selected = st.radio(
+        label="Preset Color Palette",
+        options=color_values,
+        index=default_idx,
+        format_func=lambda x: '',
+        key=state_key+"_radio",
+        horizontal=True,
+        help="Select a preset color",
+        captions=color_names,
+        label_visibility="collapsed"
+    )
+    st.markdown(
+        '<div style="display:flex;gap:8px;justify-content:left;">' +
+        ''.join(swatch_labels) +
+        '</div>',
+        unsafe_allow_html=True
+    )
+    st.session_state[state_key] = selected
+    return selected
 
 with tab_full_correction:
     st.header("Full Photo Restoration")
@@ -78,9 +139,12 @@ with tab_full_correction:
 
             bg_image = Image.fromarray(st.session_state.processed_gray)
             h, w = st.session_state.processed_gray.shape
-
-            stroke_color = st.color_picker("Pick Scribble Color", "#0000FF", key="full_st_color")
-            stroke_width = st.slider("Brush Size", 1, 20, 5, key="full_st_width")
+            st.write("**Preset Colors:**")
+            stroke_color = color_palette(PRESET_COLORS, state_key="full_st_color")
+            st.markdown("<br>", unsafe_allow_html=True)
+            stroke_color = st.color_picker("**Fine-tune color**", stroke_color)
+            st.session_state["full_st_color"] = stroke_color
+            stroke_width = st.slider("**Brush Size**", 1, 20, 5, key="full_st_width")
             canvas_result = st_canvas(
                 fill_color="rgba(255, 255, 255, 0)",
                 stroke_width=stroke_width,
@@ -174,7 +238,11 @@ with tab_manual_colorization:
         
         c1, c2 = st.columns([1, 1])
         with c1:
-            stroke_color = st.color_picker("Pick Scribble Color", "#0000FF", key="st_color")
+            st.write("**Preset Colors:**")
+            stroke_color = color_palette(PRESET_COLORS, state_key="st_color")
+            st.markdown("<br>", unsafe_allow_html=True)
+            stroke_color = st.color_picker("**Fine-tune color**", stroke_color)
+            st.session_state["st_color"] = stroke_color
             stroke_width = st.slider("Brush Size", 1, 20, 5, key="st_width")
             canvas_result = st_canvas(
                 fill_color="rgba(255, 255, 255, 0)",
@@ -221,6 +289,11 @@ with tab_recovery_colorization:
             4, 60, 12,
             key="rev_brush"
         )
+        st.write("**Preset Colors:**")
+        stroke_color = color_palette(PRESET_COLORS, state_key="rev_st_color")
+        st.markdown("<br>", unsafe_allow_html=True)
+        stroke_color = st.color_picker("**Fine-tune color**", stroke_color)
+        st.session_state["rev_st_color"] = stroke_color
 
         c1, c2 = st.columns(2)
 
