@@ -209,11 +209,10 @@ with tab_damage:
         col_sets1, col_sets2 = st.columns(2)
         
         with col_sets1:
-            thresh_val = st.slider("Threshold", 5, 100, 35, 
-                                   help="Менше значення = більше знайдених подряпин.")
+            thresh_val = st.slider("Threshold", 5, 100, 35)
             
         with col_sets2:
-            radius_val = st.slider("Inpaint Radius", 1, 10, 3,)
+            radius_val = st.slider("Inpaint Radius", 1, 10, 3)
 
         c1, c2 = st.columns([1, 1])
         
@@ -223,12 +222,19 @@ with tab_damage:
             
             with st.spinner("Processing scratches..."):
                 restored_img, debug_mask = remove_scratches(preprocessed_img, threshold=thresh_val, radius=radius_val)
+                s_val = ssim(orig_color, restored_img, channel_axis=2, data_range=255)
+                p_val = psnr(orig_color, restored_img, data_range=255)
             
             with c2:
                 st.image(restored_img, caption="Restored Image", use_column_width=True)
+            st.markdown("### Metrics (Original vs Restored)")
+            m1, m2 = st.columns(2)
+            m1.metric("PSNR (Quality Preservation)", f"{p_val:.2f} dB")
+            m2.metric("SSIM (Structural Similarity)", f"{s_val:.4f}")
             
             with st.expander("Show Scratch Mask"):
                 st.image(debug_mask, caption="Mask", use_column_width=True)
+            
 
 with tab_contrast:
     st.header("Contrast Correction")
